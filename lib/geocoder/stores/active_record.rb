@@ -120,7 +120,7 @@ module Geocoder::Store
           :select => "#{options[:select] || '*'}, " +
             "#{distance} AS distance" +
             (bearing ? ", #{bearing} AS bearing" : ""),
-          :having => "#{distance} " + (options.include?(:faraways) ? '>' : '<=') + " #{radius}"
+          :having => "#{distance} #{options.include?(:faraways) ? '>' : '<='} #{radius}"
         )
       end
 
@@ -178,13 +178,14 @@ module Geocoder::Store
           conditions[0] << " AND #{table_name}.id != ?"
           conditions << obj.id
         end
-        {
+        opts = {
           :group  => columns.map{ |c| "#{table_name}.#{c.name}" }.join(','),
           :order  => options[:order],
           :limit  => options[:limit],
-          :offset => options[:offset],
-          :conditions => conditions
+          :offset => options[:offset]
         }
+        opts.merge!(:conditions => conditions) unless options[:faraways].present?
+        opts
       end
     end
 
